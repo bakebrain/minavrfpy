@@ -1,6 +1,6 @@
 # minaVRFpy
 
-minaVRFpy is the python adaptation of the `batch-check-wittness` step from [zkvalidator]'s [mina-vrf-rs]. This is very much work in progress and made available to the mina community for experimental reasons!
+minaVRFpy is the python adaptation of the `batch-check-wittness` step from [zkvalidator]'s [mina-vrf-rs]. This is VERY much work in progress and made available to the mina community for experimental reasons!
 
 ## Intro
 
@@ -13,7 +13,7 @@ cat patches | mina advanced vrf batch-check-witness | sed 's/Using password from
 cat check | cargo run --release -- batch-check-witness --pub B62qpge4uMq4Vv5Rvc8Gw9qSquUYd6xoW1pz7HQkMSHm6h1o7pvLPAN --epoch 5
 ```
 
-This python script offers an alternative to the `batch-check-witness` part in order to e.g. gather the data over multiple epochs or to further examine and enrich the data via e.g. jupyter notebooks. See the examples provided. 
+This python script offers an alternative to the `batch-check-witness` part in order to e.g. gather the data over multiple epochs or to further examine and enrich the data via e.g. jupyter notebooks. See the [demos] provided. 
 
 ## Setup
 
@@ -21,9 +21,14 @@ clone and install via `pip install .`. The script relies also on https://github.
 
 ### config.py
 
+this file needs to be edited, inparticular `LEDGER_PATH` and `VRF_CHECKED_PATH` need to be created/setup.
+
 `MINA_EXPLORER_ENDPOINT` - [minaexplorer] enpoint  
+
 `LEDGER_PATH` - path to a folder where the ledgers are stored, e.g. '/home/user/minavrfpy/data/legers/'.
+
 `LEDGER_DOWNLOAD_SOURCE` - url of a ledger repo to download unavailable ledgers from, the default is https://raw.githubusercontent.com/zkvalidator/mina-graphql-rs/master/data/epochs 
+
 `VRF_CHECKED_PATH` - path to folder where the "checked" data is stored, e.g. '/home/user/minavrfpy/data/vrf_checked/'. Inside this folder there should be another folder name after the key of the block producer. The checked data should reside inside this folder. In order to deal with mutiple epoch data simultaneously the final data's naming convention is e.g. check-epoch-{epoch_number}, An example structure could be like this:
 
 ```
