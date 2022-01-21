@@ -1,10 +1,7 @@
 import datetime
 import hashlib
-import json
-import subprocess
 import time
 import urllib.request
-from functools import lru_cache
 from pathlib import Path
 
 import base58
@@ -14,14 +11,10 @@ import pandas as pd
 from MinaClient import Client
 from splitstream import splitfile
 
-from queries import get_epoch_query, get_stakers_query
+from minavrfpy import config
+from minavrfpy.queries import get_epoch_query, get_stakers_query
 
 SLOTS_PER_EPOCH = 7140
-MINA_EXPLORER_ENDPOINT = "https://graphql.minaexplorer.com/"
-
-ledger_downlod_location = (
-    "https://raw.githubusercontent.com/zkvalidator/mina-graphql-rs/master/data/epochs"
-)
 
 
 # outcomes
@@ -36,7 +29,6 @@ FUTURE = "FUTURE"  # not yet time
 DIDNT_HAPPEN = "DIDNT_HAPPEN"  # this case can never happen - need to check again...
 
 
-# @lru_cache(maxsize=5)
 def get_stakes_df(delegate, ledger_hash, mina_explorer_client):
     op = get_stakers_query(delegate, ledger_hash)
     res = mina_explorer_client.send_any_query(op)
@@ -45,14 +37,11 @@ def get_stakes_df(delegate, ledger_hash, mina_explorer_client):
     return stakes_df
 
 
-def read_check_witness(epoch, block_producer_key, path, only_threshold_met=True):
-    if not path:
-        path = (
-            Path.cwd()
-            / "vrf_checked"
-            / f"{block_producer_key}"
-            / f"check-epoch-{epoch}"
-        )
+def read_check_witness(epoch, block_producer_key, only_threshold_met=True):
+
+    path = (
+        Path(config.VRF_CHECKED_PATH) / f"{block_producer_key}" / f"check-epoch-{epoch}"
+    )
 
     f = open(path, "r")
     data = []
@@ -113,13 +102,12 @@ def get_vrf_comp(slot, winner_vrf, our_vrf):
 
 
 def get_ledger_df(ledger_hash):
-    ledger_path = Path.cwd() / "ledgers" / f"{ledger_hash}.json"
-    if not ledger_path.exists():
-        print(f"downloading ledger {ledger_hash}...")
+    ledger_json = Path(config.LEDGER_PATH) / f"{ledger_hash}.json"
+    if not ledger_json.exists():
         urllib.request.urlretrieve(
-            f"{ledger_downlod_location}/{ledger_hash}.json", ledger_path
+            f"{config.LEDGER_DOWNLOAD_SOURCE}/{ledger_hash}.json", str(ledger_json)
         )
-    ledger_df = pd.io.json.read_json(ledger_path)
+    ledger_df = pd.io.json.read_json(ledger_json)
     return ledger_df
 
 
@@ -127,7 +115,7 @@ def get_epoch_df(epoch, block_producer_key, mina_explorer_client=None):
     start_time = time.monotonic()
 
     if not mina_explorer_client:
-        mina_explorer_client = Client(endpoint=MINA_EXPLORER_ENDPOINT)
+        mina_explorer_client = Client(endpoint=config.MINA_EXPLORER_ENDPOINT)
 
     winner_df = get_winner_df(epoch, mina_explorer_client)
 
@@ -175,7 +163,7 @@ def get_epoch_df(epoch, block_producer_key, mina_explorer_client=None):
         )
     )
 
-    threshold_met_df = read_check_witness(epoch, block_producer_key, path=None)
+    threshold_met_df = read_check_witness(epoch, block_producer_key)
 
     my_slots_to_winners = winner_df[
         winner_df.protocolState_consensusState_slotSinceGenesis.isin(

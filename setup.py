@@ -15,8 +15,7 @@ setup(
     url="https://github.com/bakebrain/minavrfpy",
     author="Jan Backes",
     author_email="bakebrain@gmail.com",
-    package_dir={"": "minavrfpy"},
-    packages=find_packages(where="minavrfpy"),
+    packages=find_packages(include=["minavrfpy"]),
     python_requires=">=3.6, <4",
     install_requires=[
         "base58",
